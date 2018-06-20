@@ -33,6 +33,7 @@ import org.gradle.internal.resolve.resolver.ComponentMetaDataResolver;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -227,6 +228,12 @@ class ModuleResolveState implements CandidateModule {
     }
 
     public List<SelectorState> getSelectors() {
+        for (Iterator<SelectorState> it = selectors.iterator(); it.hasNext();) {
+            SelectorState selector = it.next();
+            if (!selector.isInUse()) {
+                it.remove();
+            }
+        }
         return selectors;
     }
 

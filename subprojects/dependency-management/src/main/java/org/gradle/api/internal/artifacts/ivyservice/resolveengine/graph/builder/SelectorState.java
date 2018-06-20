@@ -76,6 +76,14 @@ class SelectorState implements DependencyGraphSelector, ResolvableSelectorState 
     private boolean resolved;
     private boolean forced;
 
+    // An internal counter used to track the number of outgoing edges
+    // that use this selector. Since a module resolve state tracks all selectors
+    // for this module, when considering selectors that need to be used when
+    // choosing a version, we must only consider the ones which currently have
+    // outgoing edges pointing to them. If not, then it means the module was
+    // evicted, but it can still be reintegrated later in a different path.
+    private int outgoingEdgeCount;
+
     SelectorState(Long id, DependencyState dependencyState, DependencyToComponentIdResolver resolver, VersionSelectorScheme versionSelectorScheme, ResolveState resolveState, ModuleIdentifier targetModuleId) {
         this.id = id;
         this.dependencyState = dependencyState;
@@ -88,6 +96,18 @@ class SelectorState implements DependencyGraphSelector, ResolvableSelectorState 
         this.forced = isForced(firstSeenDependency);
         targetModule.addSelector(this);
         addDependencyMetadata(firstSeenDependency);
+    }
+
+    public void use() {
+        outgoingEdgeCount++;
+    }
+
+    public void release() {
+        outgoingEdgeCount--;
+    }
+
+    boolean isInUse() {
+        return outgoingEdgeCount >0;
     }
 
     private void addDependencyMetadata(DependencyMetadata dependencyMetadata) {
